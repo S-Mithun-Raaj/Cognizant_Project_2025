@@ -17,6 +17,7 @@ import {
   deleteDoc,
   writeBatch,
   getDoc,
+  addDoc,
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import "./gs.css";
@@ -36,10 +37,25 @@ function getSessionId(date = new Date()) {
 // Helper for structured session history
 const getStructuredHistory = (messages) => {
   return messages.map(msg => ({
-    role: msg.ChatBy === "User" ? "user" : "assistant",
-    content: msg.Message,
+    role: msg.role === "user" || msg.ChatBy === "User" ? "user" : "assistant",
+    content: msg.content || msg.Message,
     timestamp: msg.timestamp?.toDate?.()?.toISOString?.() || new Date().toISOString()
   }));
+};
+
+const callSummarizeAPI = async (text, profileId, chatId) => {
+  try {
+    const res = await fetch("/api/summarize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, profileId, chatId, sentences: 5 }),
+    });
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data.summary || "";
+  } catch {
+    return "";
+  }
 };
 
 export default function ChatbotPage({ profileId }) {
@@ -47,12 +63,12 @@ export default function ChatbotPage({ profileId }) {
   const synthRef = useRef(typeof window !== "undefined" ? window.speechSynthesis : null);
   const currentUtterRef = useRef(null);
   const fadeTimeoutRef = useRef(null);
-  const GIF_FADE_MS = -16000; // Duration for GIF fade-out
+  const GIF_FADE_MS = 16000; // Duration for GIF fade-out
 
   // States
   const [userProfileId, setUserProfileId] = useState(profileId || null);
   const [messages, setMessages] = useState([
-    { id: "init-bot-msg", ChatBy: "Bot", Message: "Hello! I'm Alpha, your AI assistant. How can I help you?" },
+    { id: "init-bot-msg", role: "assistant", content: "Hello! I'm Alpha, your AI assistant. How can I help you?" },
   ]);
   const [summary, setSummary] = useState(""); // RAG summary state
   const [input, setInput] = useState("");
@@ -157,11 +173,23 @@ export default function ChatbotPage({ profileId }) {
       // Filter out summary document from messages list
       const firestoreMessages = snapshot.docs
         .filter(d => d.id !== "summary")
-        .map(d => ({ id: d.id, ...d.data() }));
+        .map(d => {
+          const data = d.data();
+          // Always use unified schema
+          return {
+            id: d.id,
+            role: data.role || (data.ChatBy === "User" ? "user" : "assistant"),
+            content: data.content || data.Message,
+            timestamp: data.timestamp,
+            processing: data.processing || false,
+          }
+        });
       if (firestoreMessages.length > 0) {
         setMessages(firestoreMessages);
       } else {
-        setMessages([{ id: "init-bot-msg", ChatBy: "Bot", Message: "Hello! I'm Alpha, your AI assistant. How can I help you?" }]);
+        setMessages([
+          { id: "init-bot-msg", role: "assistant", content: "Hello! I'm Alpha, your AI assistant. How can I help you?" }
+        ]);
       }
     }, (err) => {
       console.error("messages onSnapshot error:", err);
@@ -304,9 +332,7 @@ export default function ChatbotPage({ profileId }) {
         endedAt: serverTimestamp(),
       });
 
-      // Clear summary on end chat
-      const summaryDocRef = doc(db, "profileData", userProfileId, "Chats", chatId, "Messages", "summary");
-      await setDoc(summaryDocRef, { summary: "" });
+      // Don't erase summary; keep historical record
 
       const now = new Date();
       const newSessionId = getSessionId(now);
@@ -318,7 +344,7 @@ export default function ChatbotPage({ profileId }) {
       });
 
       setChatId(newSessionId);
-      setMessages([{ id: "init-bot-msg", ChatBy: "Bot", Message: "Hello! I'm Alpha, your AI assistant. How can I help you?" }]);
+      setMessages([{ id: "init-bot-msg", role: "assistant", content: "Hello! I'm Alpha, your AI assistant. How can I help you?" }]);
       setSummary("");
     } catch (error) {
       console.error("Error ending chat:", error);
@@ -339,7 +365,7 @@ export default function ChatbotPage({ profileId }) {
         title: `Chat on ${now.toLocaleString()}`,
       });
       setChatId(sessionId);
-      setMessages([{ id: "init-bot-msg", ChatBy: "Bot", Message: "Hello! I'm Alpha, your AI assistant. How can I help you?" }]);
+      setMessages([{ id: "init-bot-msg", role: "assistant", content: "Hello! I'm Alpha, your AI assistant. How can I help you?" }]);
       setSummary("");
     } catch (error) {
       console.error("Error starting new chat:", error);
@@ -374,7 +400,7 @@ export default function ChatbotPage({ profileId }) {
 
       if (chatId === deleteChatId) {
         setChatId(null);
-        setMessages([{ id: "init-bot-msg", ChatBy: "Bot", Message: "Hello! I'm Alpha, your AI assistant. How can I help you?" }]);
+        setMessages([{ id: "init-bot-msg", role: "assistant", content: "Hello! I'm Alpha, your AI assistant. How can I help you?" }]);
         setSummary("");
       }
     } catch (error) {
@@ -385,34 +411,14 @@ export default function ChatbotPage({ profileId }) {
 
   // Helper: Get text version of messages history
   const messagesToText = (msgs) => {
-    return msgs.map(m => `${m.ChatBy === "User" || m.role === "user" ? "user" : "assistant"}: ${m.Message || m.content}`).join("\n");
-  };
-
-  // Summarize text via /api/summarize endpoint
-  const callSummarizeAPI = async (text) => {
-    try {
-      const res = await fetch("/api/summarize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) {
-        console.error("Summarize API error");
-        return "";
-      }
-      const data = await res.json();
-      return data.summary || "";
-    } catch (err) {
-      console.error("Summarize exception:", err);
-      return "";
-    }
+    return msgs.map(m => `${m.role === "user" ? "user" : "assistant"}: ${m.content}`).join("\n");
   };
 
   // Send message & handle AI response with RAG buffer + summarizer
   const handleSend = async () => {
     if (!input.trim() || !userProfileId || activeChatEnded) return;
     const userMsg = input.trim();
-    setMessages((prev) => [...prev, { id: `${Date.now()}-user`, ChatBy: "User", Message: userMsg }]);
+    setMessages((prev) => [...prev, { id: `${Date.now()}-user`, role: "user", content: userMsg }]);
     setInput("");
 
     try {
@@ -430,17 +436,18 @@ export default function ChatbotPage({ profileId }) {
         setChatId(activeChatId);
       }
 
+      const messagesRef = collection(db, "profileData", userProfileId, "Chats", activeChatId, "Messages");
       const now = new Date();
       const msgTime = formatTimeKey(now);
-      const userMsgRef = doc(db, "profileData", userProfileId, "Chats", activeChatId, "Messages", msgTime);
-      await setDoc(userMsgRef, {
+
+      await setDoc(doc(messagesRef, msgTime), {
         role: "user",
         content: userMsg,
         timestamp: serverTimestamp(),
       });
 
       const botMsgTime = formatTimeKey(new Date(Date.now() + 1000));
-      const processingRef = doc(db, "profileData", userProfileId, "Chats", activeChatId, "Messages", botMsgTime);
+      const processingRef = doc(messagesRef, botMsgTime);
       await setDoc(processingRef, {
         role: "assistant",
         content: "⏳ Processing...",
@@ -448,59 +455,81 @@ export default function ChatbotPage({ profileId }) {
         processing: true,
       });
 
-      const updatedMessages = [...messages, { ChatBy: "User", Message: userMsg }];
+      // Get all messages for threshold check
+      const snapshot = await getDocs(messagesRef);
+      const updatedMessages = snapshot.docs
+        .filter(d => d.id !== "summary")
+        .map(d => ({
+          id: d.id,
+          ...d.data(),
+        }));
 
       // If exceeding threshold, summarize and save summary doc in Messages subcollection
-      if (updatedMessages.length > 20) {
-        const fullText = messagesToText(updatedMessages);
-        const newSummary = await callSummarizeAPI(fullText);
+      if (updatedMessages.length > 50) {
+        const text = updatedMessages.map(m => m.content).join(" ");
+        const newSummary = await callSummarizeAPI(text, userProfileId, activeChatId);
         setSummary(newSummary);
 
-        const summaryDocRef = doc(db, "profileData", userProfileId, "Chats", activeChatId, "Messages", "summary");
+        const summaryDocRef = doc(messagesRef, "summary");
         await setDoc(summaryDocRef, { summary: newSummary });
       }
 
+      // --- Build context & structured history ---
       const lastFiveMsgs = updatedMessages.slice(-5);
-      const context = summary && updatedMessages.length > 20
-        ? summary + "\n" + messagesToText(lastFiveMsgs)
-        : messagesToText(updatedMessages);
+      const context =
+        summary && updatedMessages.length > 50
+          ? `${summary}\n${messagesToText(lastFiveMsgs)}`
+          : messagesToText(updatedMessages);
 
+      const structured = getStructuredHistory(updatedMessages);
+
+      // --- Call model correctly ---
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
 
       let answer;
       try {
-        const response = await fetch(API_URL+"/alpha_bot80", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ request: userMsg, history }),
-        signal: controller.signal,
-      });
+        const response = await fetch(`${API_URL}/alpha_bot80`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            request: userMsg,
+            context,
+            messages: structured,
+            chatId: activeChatId,
+            profileId: userProfileId,
+          }),
+          signal: controller.signal,
+        });
         clearTimeout(timeoutId);
         if (!response.ok) throw new Error("API error");
         const data = await response.json();
         answer = data.answer ?? "Sorry, I couldn't generate an answer.";
-      } catch {
+      } catch (e) {
+        console.error("Model call failed:", e);
         answer = "⚠️ An error occurred. Try again!";
       }
 
+      // Keep unified schema when saving bot response
       await setDoc(processingRef, {
-        ChatBy: "Bot",
-        Message: answer,
+        role: "assistant",
+        content: answer,
         timestamp: serverTimestamp(),
         processing: false,
       });
 
-      setMessages(prev => [...prev.filter(m => !m.processing), { id: `${Date.now()}-bot`, ChatBy: "Bot", Message: answer }]);
+      setMessages(prev => [
+        ...prev.filter(m => !m.processing),
+        { id: `${Date.now()}-bot`, role: "assistant", content: answer }
+      ]);
 
       speakText(answer);
     } catch (error) {
       console.error("handleSend error:", error);
-      setMessages(prev => [...prev, { id: `error-bot-${Date.now()}`, ChatBy: "Bot", Message: "⚠️ An error occurred. Try again!" }]);
+      setMessages(prev => [...prev, { id: `error-bot-${Date.now()}`, role: "assistant", content: "⚠️ An error occurred. Try again!" }]);
       speakText("An error occurred. Try again!");
     }
   };
-
 
   return (
     <>
@@ -542,12 +571,6 @@ export default function ChatbotPage({ profileId }) {
             )}
           </div>
         </div>
-        {/* <div className="ai-avatar">
-          <div className="avatar-wrapper">
-            <Image src="/doc.jpg" alt="AI Avatar" width={160} height={160} />
-            {isSpeaking && <Image key={gifKey} src="/doc.gif" alt="AI Speaking" width={160} height={160} />}
-          </div>
-        </div> */}
         <div className="chat-box">
           <div className="messages" ref={chatRef}>
             {messages.map((msg) => {
@@ -555,9 +578,9 @@ export default function ChatbotPage({ profileId }) {
               return (
                 <div
                   key={msg.id}
-                  className={`message ${msg.ChatBy === "Bot" ? "bot" : "user"}${isProcessing ? " processing" : ""}`}
+                  className={`message ${msg.role === "assistant" ? "bot" : "user"}${isProcessing ? " processing" : ""}`}
                 >
-                  {msg.Message || msg.content}
+                  {msg.content}
                 </div>
               );
             })}
