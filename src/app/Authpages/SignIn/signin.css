@@ -1,0 +1,112 @@
+/* General Styling */
+body {
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+/* Container */
+.screen-1 {
+  background: #fff;
+  width: 400px;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+
+/* Logo */
+.logo {
+  margin-bottom: 20px;
+}
+
+/* Input Field Styling */
+label {
+  font-weight: 500;
+  display: block;
+  text-align: left;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.sec-2 {
+  display: flex;
+  align-items: center;
+  background: #f4f4f4;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.sec-2 input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  padding: 8px;
+  outline: none;
+}
+
+/* Password Toggle Button */
+.toggle-password {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #007bff;
+  cursor: pointer;
+}
+
+/* Login / Signup Button */
+.login {
+  width: 100%;
+  background: #000;
+  color: white;
+  border: none;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  margin-top: 15px;
+}
+
+.login:hover {
+  background: #444;
+  transform: scale(1.05);
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.footer span {
+  cursor: pointer;
+  color: #007bff;
+}
+
+.footer a {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: 500;
+}
+
+.footer span:hover,
+.footer a:hover {
+  text-decoration: underline;
+}
+#holo{
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  border: none;
+  margin-right: 30px;
+  margin-top:10px;
+  margin-left: 30px;
+}

@@ -1,0 +1,173 @@
+/*   
+  Unique class names prefixed with 'cb-' to prevent collisions 
+  with any global/Tailwind styles 
+*/
+
+/* Container with a light gradient background */
+.body{
+  background-image: url("https://media.istockphoto.com/id/1370772148/photo/track-and-mountains-in-valle-del-lago-somiedo-nature-park-asturias-spain.jpg?s=612x612&w=0&k=20&c=QJn62amhOddkJSbihcjWKHXShMAfcKM0hPN65aCloco=");
+}
+.cb-container {
+  max-width: 900px;
+  margin: 20px auto;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+
+  /* Stack elements vertically */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Title */
+.cb-title {
+  text-align: center;
+  color: #333;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+/* Chat box for messages */
+.cb-box {
+  width: 100%;
+  height: 300px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 10px;
+
+  /* Stack messages top-to-bottom */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Base message style */
+.cb-message {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 5px;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+/* Uploaded image style */
+.cb-img {
+  width: 100%;
+  max-width: 300px;
+  border-radius: 10px;
+  margin-top: 5px;
+}
+
+/* User message on the right */
+.cb-message-user {
+  background: #4caf50;
+  color: #fff;
+  align-self: flex-end;
+}
+
+/* Bot message on the left */
+.cb-message-bot {
+  background: #007bff;
+  color: #fff;
+  align-self: flex-start;
+}
+
+/* Input row with better spacing and alignment */
+.cb-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #313030;
+  padding: 10px;
+  border-radius: 8px;
+  position: relative; /* ✅ Required for button positioning */
+}
+
+/* Completely hide native file input */
+.cb-file-upload {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Custom file upload button */
+.cb-file-label {
+  background: #bbdefb;
+  color: #090909;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Show selected file name */
+.cb-file-name {
+  font-size: 14px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1; /* ✅ Allow file name to grow within its space */
+}
+
+/* ✅ Keep the send button fixed on the right */
+.cb-send-btn {
+  padding: 10px 15px;
+  background: #ffcc00;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+  transition: 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  position: absolute; /* ✅ Fixed in the same row */
+  right: 10px; /* ✅ Stay fixed to the right */
+  top: 50%;
+  transform: translateY(-50%);
+}
+.cb-send-btn:hover {
+  background: #ffdb4d;
+}
+
+/* File container to align file and label properly */
+.cb-file-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-grow: 1; /* ✅ File name and input take available space */
+}
+/* ✅ Container to align image and button */
+.cb-img-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ✅ Download button for the image */
+.cb-download-btn {
+  padding: 8px 12px;
+  background-color: #313030;
+  color: #fff;
+  border-radius: 15px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background 0.3s ease-in-out;
+}
+
+.cb-download-btn:hover {
+  background-color: rgb(0, 0, 0);
+}

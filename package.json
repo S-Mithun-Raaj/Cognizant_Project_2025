@@ -1,0 +1,33 @@
+{
+  "name": "virtual-clinician",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.3",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.7",
+    "firebase": "^11.10.0",
+    "framer-motion": "^12.4.7",
+    "js-cookie": "^3.0.5",
+    "next": "^15.4.2",
+    "node-fetch": "^3.3.2",
+    "node-summarizer": "^1.0.7",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9",
+    "eslint-config-next": "15.2.0",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.0.9"
+  }
+}
