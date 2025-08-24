@@ -1,0 +1,107 @@
+.container {
+  max-width: 650px;
+  margin: 40px auto;
+  padding: 25px;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  text-align: center;
+  font-family: 'Arial', sans-serif;
+}
+
+.title {
+  font-size: 1.9rem;
+  font-weight: 600;
+  margin-bottom: 25px;
+  color: #333;
+}
+
+.dragArea {
+  border: 2px dashed #aaa;
+  border-radius: 12px;
+  padding: 40px 20px;
+  cursor: pointer;
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.dragArea.active {
+  border-color: #4caf50;
+  background: #f0fff0;
+}
+
+.dragText {
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.fileList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.fileItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: #f7f7f7;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.removeBtn {
+  background: #ff4d4d;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.removeBtn:hover {
+  background: #45abee;
+}
+
+.toggleWrapper {
+  margin-top: 25px;
+  font-size: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  color: #000; /* Black font */
+  font-weight: 500;
+}
+
+.toggleWrapper input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  accent-color: #45abee;
+}
+
+.uploadBtn {
+  margin-top: 25px;
+  padding: 12px 25px;
+  background: #4caf50;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.uploadBtn:disabled {
+  background: #45abee;
+  cursor: not-allowed;
+}
+
+.uploadBtn:hover:not(:disabled) {
+  background: #45abee;
+}

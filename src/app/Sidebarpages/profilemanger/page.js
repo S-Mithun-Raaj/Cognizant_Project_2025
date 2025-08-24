@@ -177,9 +177,13 @@ const Profile = () => {
 
   // Store only the profile id for easy access throughout the app
   const handleSelectProfile = (profile) => {
-    localStorage.setItem('selectedProfileId', profile.id);
-    router.push('/GS');
-  };
+  localStorage.setItem("selectedProfileId", profile.id);
+  localStorage.setItem("selectedProfileName", profile.name);
+  router.push("/Sidebarpages/profile/uploadpage"); // redirect to Upload Page
+};
+
+
+
 
   const resetFormData = () => {
     setFormData({
