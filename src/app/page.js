@@ -161,32 +161,29 @@ export default function Home() {
 
             {/* Right Side - New Section */}
             <div className="col-md-6">
-              <div className="container d-flex justify-content-center py-5 mt-5">
-                <div
-                  className="card shadow-lg p-4 d-flex flex-row align-items-center"
-                  style={{ maxWidth: "800px", borderRadius: "15px" }}
-                >
+              <div>
+                <div>
                   {/* Left Side - Text */}
-                  <div className="flex-grow-1 text-start px-4">
-                    <h1 className="fw-bold">Welcome to AlphaWell</h1>
-                    <p className="text-muted">
-                      Just ask—LiveChatAI is here to guide, assist, and support your
-                      health anytime.
-                    </p>
-                    <button className="btn btn-dark rounded-pill px-4 py-2 mt-2">
-                      Read the Docs →
-                    </button>
+                  <div>
+                   {/* <iframe src='https://my.spline.design/genkubgreetingrobot-oMr34GupQkydFQdseY1G6KGd/' width='100%' height='100%'></iframe> */}
+                   <div>
+                  <iframe
+                  src="https://my.spline.design/genkubgreetingrobot-oMr34GupQkydFQdseY1G6KGd/"
+                  width="800"
+                  height="620"
+                  style={{ borderRadius: "1000px" }}
+                   ></iframe>
+                  </div>
                   </div>
 
                   {/* Right Side - Image */}
                   <div>
-                    <Image
-                      src="/chat-image.png"
-                      alt="LiveChatAI Preview"
-                      width={700}
-                      height={700}
-                      className="img-fluid rounded"
-                    />
+                 <img 
+                src="/x.png" 
+                alt="bot" 
+                width="80"
+                height="60"
+                style={{ float: "right", marginTop: "-80px", marginRight: "-55px" }}/>
                   </div>
                 </div>
               </div>

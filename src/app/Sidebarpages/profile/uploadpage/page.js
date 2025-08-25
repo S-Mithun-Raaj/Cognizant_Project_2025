@@ -10,6 +10,7 @@ import {
   query,
   orderBy,
   limit,
+  doc,
 } from "firebase/firestore";
 import styles from "./UploadPage.module.css";
 
@@ -20,8 +21,10 @@ export default function UploadPage() {
   const [selectedProfileId, setSelectedProfileId] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
   const router = useRouter();
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
 
   // ✅ Load profile info
   useEffect(() => {
@@ -33,8 +36,31 @@ export default function UploadPage() {
     console.log("📌 Loaded profile:", { name, id });
   }, []);
 
+  const validateFile = (file) => {
+    if (!file.type.includes("pdf")) {
+      throw new Error(`${file.name} is not a PDF file`);
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error(`${file.name} exceeds 10MB limit`);
+    }
+    return true;
+  };
+
   const handleFiles = (selectedFiles) => {
-    setFiles((prev) => [...prev, ...Array.from(selectedFiles)]);
+    try {
+      const validFiles = Array.from(selectedFiles).filter((file) => {
+        try {
+          return validateFile(file);
+        } catch (err) {
+          alert(err.message);
+          return false;
+        }
+      });
+      setFiles((prev) => [...prev, ...validFiles]);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const handleRemoveFile = (index) => {
@@ -66,67 +92,69 @@ export default function UploadPage() {
 
   // ✅ Upload PDF(s)
   const handleUpload = async () => {
-    if (files.length === 0) return alert("No files selected!");
-    if (!selectedProfileId) return alert("❌ No profile selected!");
+    if (files.length === 0) {
+      setError("No files selected!");
+      return;
+    }
+    if (!selectedProfileId) {
+      setError("No profile selected!");
+      return;
+    }
 
     setLoading(true);
     setUploadProgress(0);
+    setError(null);
 
     try {
       const formData = new FormData();
       files.forEach((file) => {
-        formData.append("files", file); // same key for multiple files
+        validateFile(file); // Revalidate before upload
+        formData.append("files", file);
       });
-      formData.append("user_id", selectedProfileId); // backend expects this
-
-      console.log(
-        "📂 Uploading PDFs:",
-        files.map((f) => f.name),
-        "➡ Profile ID:",
-        selectedProfileId
-      );
+      formData.append("user_id", selectedProfileId);
 
       const res = await fetch("your_link/upload", {
         method: "POST",
         body: formData,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || `Upload failed with status ${res.status}`);
+      }
 
-      // ✅ Save metadata for each uploaded file into Firestore
+      const data = await res.json();
+
+      // Firestore batch write for better performance
+      const batch = db.batch();
       const uploadsRef = collection(
         db,
         "profileData",
         selectedProfileId,
         "uploads"
       );
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        await addDoc(uploadsRef, {
+
+      files.forEach((file, index) => {
+        const docRef = doc(uploadsRef);
+        batch.set(docRef, {
           fileName: file.name,
           uploadedAt: new Date(),
+          fileSize: file.size,
           namespace: data.namespace,
           index_name: data.index_name || selectedProfileId,
           profileName,
         });
+        setUploadProgress(Math.round(((index + 1) / files.length) * 100));
+      });
 
-        console.log("✅ Firestore Saved:", {
-          profileId: selectedProfileId,
-          fileName: file.name,
-          namespace: data.namespace,
-        });
+      await batch.commit();
 
-        setUploadProgress(Math.round(((i + 1) / files.length) * 100));
-      }
-
-      alert("PDF(s) uploaded successfully!");
       setFiles([]);
       setUploadProgress(100);
       router.push(`/GS?profileId=${selectedProfileId}`);
     } catch (err) {
-      console.error(err);
-      alert("Upload failed: " + (err.message || "Unknown error"));
+      console.error("Upload error:", err);
+      setError(err.message || "Upload failed");
       setUploadProgress(0);
     } finally {
       setLoading(false);
@@ -256,13 +284,22 @@ export default function UploadPage() {
         </div>
       )}
 
+      {error && <div className={styles.error}>{error}</div>}
+
       <div className={styles.buttons}>
         <button
           onClick={handleUpload}
           disabled={files.length === 0 || loading}
           className={styles.uploadBtn}
         >
-          {loading ? "Uploading..." : "Upload & Continue"}
+          {loading ? (
+            <div className={styles.loaderWrapper}>
+              <div className={styles.loader}></div>
+              <span>Uploading...</span>
+            </div>
+          ) : (
+            "Upload & Continue"
+          )}
         </button>
 
         <button

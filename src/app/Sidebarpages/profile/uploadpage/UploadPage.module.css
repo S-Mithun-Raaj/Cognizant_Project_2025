@@ -1,107 +1,282 @@
+/* ====== Container (Glassmorphism) ====== */
 .container {
-  max-width: 650px;
-  margin: 40px auto;
-  padding: 25px;
-  background: #fff;
-  border-radius: 15px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  max-width: 780px;
+  margin: 3rem auto;
+  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-radius: 1.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   text-align: center;
-  font-family: 'Arial', sans-serif;
+  font-family: "Inter", sans-serif;
+  color: #1e293b;
+  will-change: transform;
 }
 
+/* ====== Title ====== */
 .title {
-  font-size: 1.9rem;
-  font-weight: 600;
-  margin-bottom: 25px;
-  color: #333;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 1.8rem;
+  background: linear-gradient(90deg, #3b82f6, #06b6d4, #9333ea);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
+/* ====== Drag Area ====== */
 .dragArea {
-  border: 2px dashed #aaa;
-  border-radius: 12px;
-  padding: 40px 20px;
+  border: 2px dashed rgba(148, 163, 184, 0.6);
+  border-radius: 1.2rem;
+  padding: 3rem 2rem;
+  background: rgba(241, 245, 249, 0.6);
   cursor: pointer;
-  transition: border-color 0.3s, background 0.3s;
+  transition: all 0.35s ease;
+  position: relative;
+  overflow: hidden;
+  will-change: transform, border-color;
+}
+
+.dragArea::before {
+  content: "📂";
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.8rem;
+}
+
+.dragArea:hover {
+  border-color: #3b82f6;
+  background: rgba(239, 246, 255, 0.7);
+  transform: scale(1.02);
 }
 
 .dragArea.active {
-  border-color: #4caf50;
-  background: #f0fff0;
+  border-color: #06b6d4;
+  background: rgba(219, 234, 254, 0.8);
+  animation: pulseGlow 1.5s infinite;
 }
 
+@keyframes pulseGlow {
+  0% { 
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    transform: scale(1);
+  }
+  70% { 
+    box-shadow: 0 0 0 15px rgba(59, 130, 246, 0);
+    transform: scale(1.02);
+  }
+  100% { 
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    transform: scale(1);
+  }
+}
+
+/* ====== Drag Text ====== */
 .dragText {
-  font-size: 1.1rem;
-  color: #666;
+  color: #334155;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
+/* ====== File List ====== */
 .fileList {
   list-style: none;
   padding: 0;
   margin: 0;
+  text-align: left;
 }
 
 .fileItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 8px 0;
-  padding: 8px 12px;
-  background: #f7f7f7;
-  border-radius: 6px;
+  background: linear-gradient(90deg, #f1f5f9, #e2e8f0);
+  padding: 0.9rem 1.2rem;
+  border-radius: 1rem;
+  margin-bottom: 0.6rem;
   font-size: 0.95rem;
+  font-weight: 500;
+  color: #1e293b;
+  transition: transform 0.2s ease;
+  gap: 1rem;
+}
+
+.fileItem:hover {
+  transform: translateX(5px);
 }
 
 .removeBtn {
-  background: #ff4d4d;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
+  background: #ef4444;
   color: #fff;
+  border: none;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+  border-radius: 0.6rem;
   cursor: pointer;
-  font-size: 0.85rem;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 
 .removeBtn:hover {
-  background: #45abee;
+  background: #dc2626;
+  transform: scale(1.05);
 }
 
-.toggleWrapper {
-  margin-top: 25px;
-  font-size: 1rem;
+.fileInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.fileName {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.fileSize {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.2rem;
+}
+
+/* ====== Progress Bar (Gradient & Animation) ====== */
+.progressBarContainer {
+  margin: 1.5rem 0;
+  height: 14px;
+  background: rgba(226, 232, 240, 0.6);
+  border-radius: 9999px;
+  position: relative;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(270deg, #3b82f6, #06b6d4, #9333ea);
+  background-size: 400% 400%;
+  border-radius: 9999px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: gradientShift 3s ease infinite;
+  will-change: width, background-position;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.progressText {
+  margin-top: 0.6rem;
+  font-size: 0.95rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+/* ====== Buttons ====== */
+.buttons {
   display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 10px;
-  color: #000; /* Black font */
-  font-weight: 500;
+  gap: 1rem;
+  margin-top: 2rem;
 }
 
-.toggleWrapper input[type="checkbox"] {
-  width: 22px;
-  height: 22px;
-  cursor: pointer;
-  accent-color: #45abee;
-}
-
+/* Upload Button with Shimmer */
 .uploadBtn {
-  margin-top: 25px;
-  padding: 12px 25px;
-  background: #4caf50;
-  color: #fff;
+  position: relative;
+  padding: 0.9rem 1.8rem;
+  border-radius: 0.9rem;
   font-size: 1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.3s;
+  border: none;
+  color: white;
+  background: linear-gradient(90deg, #3b82f6, #06b6d4, #9333ea);
+  background-size: 200% 200%;
+  animation: shimmer 3s ease infinite;
+  transition: transform 0.2s ease;
+  will-change: transform;
+  -webkit-font-smoothing: antialiased;
+}
+
+.uploadBtn:hover {
+  transform: scale(1.05);
 }
 
 .uploadBtn:disabled {
-  background: #45abee;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
-.uploadBtn:hover:not(:disabled) {
-  background: #45abee;
+@keyframes shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Skip Button */
+.skipBtn {
+  padding: 0.9rem 1.8rem;
+  border-radius: 0.9rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  color: #1e293b;
+  transition: all 0.25s ease;
+  will-change: transform;
+}
+
+.skipBtn:hover {
+  background: #e2e8f0;
+  transform: scale(1.03);
+}
+
+/* ====== Loader Spinner (Inside Upload Button) ====== */
+.loaderWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-top: 3px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  will-change: transform;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error Message Styling */
+.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  padding: 1rem;
+  border-radius: 0.8rem;
+  margin: 1rem 0;
+  font-weight: 500;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Disabled States */
+.dragArea.disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: rgba(241, 245, 249, 0.3);
 }
