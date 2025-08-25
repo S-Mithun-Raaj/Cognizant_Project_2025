@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import summarize from "@/Utils/summarizer"; // path: C:\Users\asus\Videos\Cognizant_Project\Cognizant_Project_2025\src\Utils\summarizer.js
-import { db } from "@/firebase"; 
+import { summarize } from "@/Utils/summarizer"; // path: C:\Users\asus\Videos\Cognizant_Project\Cognizant_Project_2025\src\Utils\summarizer.js
+import { db } from "@/firebaseConfig"; // path: C:\Users\asus\Videos\Cognizant_Project\Cognizant_Project_2025\src\firebaseConfig.js
 import { doc, setDoc, collection, getDocs, deleteDoc } from "firebase/firestore";
 
 export async function POST(req) {

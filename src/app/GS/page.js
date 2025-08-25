@@ -10,7 +10,6 @@ import {
   orderBy,
   onSnapshot,
   setDoc,
-  updateDoc,
   serverTimestamp,
   getDocs,
   doc,
@@ -18,6 +17,7 @@ import {
   writeBatch,
   getDoc,
   addDoc,
+  limit,
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import "./gs.css";
@@ -34,7 +34,6 @@ function getSessionId(date = new Date()) {
   return `${formatDateKey(date)}-${formatTimeKey(date)}`;
 }
 
-// Helper for structured session history
 const getStructuredHistory = (messages) => {
   return messages.map(msg => ({
     role: msg.role === "user" || msg.ChatBy === "User" ? "user" : "assistant",
@@ -63,18 +62,18 @@ export default function ChatbotPage({ profileId }) {
   const synthRef = useRef(typeof window !== "undefined" ? window.speechSynthesis : null);
   const currentUtterRef = useRef(null);
   const fadeTimeoutRef = useRef(null);
-  const GIF_FADE_MS = -16000; // Duration for GIF fade-out
 
   // States
   const [userProfileId, setUserProfileId] = useState(profileId || null);
   const [messages, setMessages] = useState([
     { id: "init-bot-msg", role: "assistant", content: "Hello! I'm Alpha, your AI assistant. How can I help you?" },
   ]);
-  const [summary, setSummary] = useState(""); // RAG summary state
+  const [summary, setSummary] = useState("");
   const [input, setInput] = useState("");
   const [chatTopics, setChatTopics] = useState([]);
   const [chatId, setChatId] = useState(null);
-  const activeChatEnded = !!chatTopics.find((c) => c.id === chatId && c.ended);
+  const [namespace, setNamespace] = useState(null); // <- track namespace
+  const [retrieverSet, setRetrieverSet] = useState(false); // <- track retriever status
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [voices, setVoices] = useState([]);
@@ -92,6 +91,44 @@ export default function ChatbotPage({ profileId }) {
       }
       setUserProfileId(storedId);
     }
+  }, [userProfileId]);
+
+  // Fetch latest namespace & set retriever when profile loads
+  useEffect(() => {
+    if (!userProfileId) return;
+    const fetchNamespaceAndSetRetriever = async () => {
+      try {
+        // Fetch latest namespace from Firestore
+        const uploadsRef = collection(db, "profileData", userProfileId, "uploads");
+        const q = query(uploadsRef, orderBy("uploadedAt", "desc"), limit(1));
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+          console.warn("No namespace found for profile");
+          return;
+        }
+
+        const latest = snap.docs[0].data();
+        const namespace = latest.namespace;
+        setNamespace(namespace);
+
+        // Call backend to set retriever
+        const res = await fetch(`${API_URL}/setRetriever`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ namespace }),
+        });
+
+        if (!res.ok) throw new Error("Failed to set retriever");
+
+        setRetrieverSet(true);
+        console.log("✅ Retriever set with namespace:", namespace);
+      } catch (err) {
+        console.error("Error setting retriever:", err);
+      }
+    };
+
+    fetchNamespaceAndSetRetriever();
   }, [userProfileId]);
 
   // Load and listen chat sessions list
@@ -170,12 +207,10 @@ export default function ChatbotPage({ profileId }) {
     const q = query(messagesRef, orderBy("timestamp", "asc"));
 
     let unsub = onSnapshot(q, (snapshot) => {
-      // Filter out summary document from messages list
       const firestoreMessages = snapshot.docs
         .filter(d => d.id !== "summary")
         .map(d => {
           const data = d.data();
-          // Always use unified schema
           return {
             id: d.id,
             role: data.role || (data.ChatBy === "User" ? "user" : "assistant"),
@@ -215,7 +250,6 @@ export default function ChatbotPage({ profileId }) {
     return () => unsub();
   }, [userProfileId, chatId]);
 
-  // Scroll chat to bottom on new messages
   useEffect(() => {
     if (chatRef.current) {
       setTimeout(() => {
@@ -237,7 +271,6 @@ export default function ChatbotPage({ profileId }) {
     };
   }, []);
 
-  // TTS helpers
   const speakText = (text, opts = {}) => {
     if (isMuted) return;
     if (!synthRef.current || !text) return;
@@ -279,7 +312,7 @@ export default function ChatbotPage({ profileId }) {
         setIsSpeaking(false);
         currentUtterRef.current = null;
         fadeTimeoutRef.current = null;
-      }, GIF_FADE_MS);
+      }, 16000);
     };
     utter.onerror = () => {
       if (fadeTimeoutRef.current) {
@@ -289,7 +322,7 @@ export default function ChatbotPage({ profileId }) {
         setIsSpeaking(false);
         currentUtterRef.current = null;
         fadeTimeoutRef.current = null;
-      }, GIF_FADE_MS);
+      }, 16000);
     };
     try {
       synthRef.current.speak(utter);
@@ -320,36 +353,6 @@ export default function ChatbotPage({ profileId }) {
       if (!m) stopSpeaking();
       return !m;
     });
-  };
-
-  // End chat, mark ended, then create new chat session
-  const handleEndChat = async () => {
-    if (!chatId || !userProfileId) return;
-    try {
-      const chatRefObj = doc(db, "profileData", userProfileId, "Chats", chatId);
-      await updateDoc(chatRefObj, {
-        ended: true,
-        endedAt: serverTimestamp(),
-      });
-
-      // Don't erase summary; keep historical record
-
-      const now = new Date();
-      const newSessionId = getSessionId(now);
-      const newChatRef = doc(db, "profileData", userProfileId, "Chats", newSessionId);
-      await setDoc(newChatRef, {
-        createdAt: serverTimestamp(),
-        ended: false,
-        title: `Chat on ${now.toLocaleString()}`,
-      });
-
-      setChatId(newSessionId);
-      setMessages([{ id: "init-bot-msg", role: "assistant", content: "Hello! I'm Alpha, your AI assistant. How can I help you?" }]);
-      setSummary("");
-    } catch (error) {
-      console.error("Error ending chat:", error);
-      alert("Failed to end chat. Try again.");
-    }
   };
 
   // Manually start new chat
@@ -409,14 +412,17 @@ export default function ChatbotPage({ profileId }) {
     }
   };
 
-  // Helper: Get text version of messages history
   const messagesToText = (msgs) => {
     return msgs.map(m => `${m.role === "user" ? "user" : "assistant"}: ${m.content}`).join("\n");
   };
 
   // Send message & handle AI response with RAG buffer + summarizer
   const handleSend = async () => {
-    if (!input.trim() || !userProfileId || activeChatEnded) return;
+    if (!retrieverSet) {
+      alert("Retriever not ready yet. Please wait...");
+      return;
+    }
+    if (!input.trim() || !userProfileId) return;
     const userMsg = input.trim();
     setMessages((prev) => [...prev, { id: `${Date.now()}-user`, role: "user", content: userMsg }]);
     setInput("");
@@ -498,6 +504,7 @@ export default function ChatbotPage({ profileId }) {
             messages: structured,
             chatId: activeChatId,
             profileId: userProfileId,
+            namespace,
           }),
           signal: controller.signal,
         });
@@ -544,6 +551,11 @@ export default function ChatbotPage({ profileId }) {
           <Link href="/profile"><img src="https://cdn-icons-png.flaticon.com/512/6522/6522516.png" alt="Profile" width={40} height={40} className="rounded-circle profile-icon" /></Link>
         </div>
       </nav>
+
+      {/* Retriever status */}
+      <div className="retriever-status" style={{ textAlign: "center", margin: "10px 0" }}>
+        {retrieverSet ? "✅ Retriever ready" : "⏳ Setting retriever..."}
+      </div>
 
       {/* Sidebar */}
       {isSidebarOpen && <div className="sidebar open"><h4>Menu</h4></div>}
@@ -592,20 +604,13 @@ export default function ChatbotPage({ profileId }) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              disabled={activeChatEnded}
-              placeholder={activeChatEnded ? "This chat is ended and read-only." : "Type your message..."}
+              placeholder={retrieverSet ? "Type your message..." : "Retriever not ready..."}
+              disabled={!retrieverSet}
             />
-            <button className="send-btn" onClick={handleSend} disabled={activeChatEnded}>Send</button>
-            {activeChatEnded && (
-              <button className="btn btn-secondary new-chat-btn ms-2" onClick={handleNewChat}>
-                New Chat
-              </button>
-            )}
-            {!activeChatEnded && chatId && (
-              <button className="btn btn-danger end-chat-btn ms-2" onClick={handleEndChat}>
-                End Chat
-              </button>
-            )}
+            <button className="send-btn" onClick={handleSend} disabled={!retrieverSet}>Send</button>
+            <button className="btn btn-secondary new-chat-btn ms-2" onClick={handleNewChat}>
+              New Chat
+            </button>
           </div>
         </div>
       </div>

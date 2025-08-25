@@ -1,6 +1,7 @@
 // src/app/firebaseConfig.js
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage"; // ✅ Add storage
 
 // ✅ Public Firebase client config (from your environment variables)
 const firebaseConfig = {
@@ -15,7 +16,8 @@ const firebaseConfig = {
 // ✅ Initialize Firebase app (only once)
 const firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// ✅ Firestore instance
+// ✅ Firestore + Storage
 export const db = getFirestore(firebaseApp);
+export const storage = getStorage(firebaseApp); // ✅ Export storage
 
 export default firebaseApp;
