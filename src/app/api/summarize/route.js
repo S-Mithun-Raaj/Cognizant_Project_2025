@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { summarize } from "@/Utils/summarizer"; // path: C:\Users\asus\Videos\Cognizant_Project\Cognizant_Project_2025\src\Utils\summarizer.js
-import { db } from "@/firebaseConfig"; // path: C:\Users\asus\Videos\Cognizant_Project\Cognizant_Project_2025\src\firebaseConfig.js
+import { summarize } from "@/Utils/summarizer";
+import { db } from "@/firebaseConfig";
 import { doc, setDoc, collection, getDocs, deleteDoc } from "firebase/firestore";
 
 export async function POST(req) {
@@ -37,12 +37,18 @@ export async function POST(req) {
       await deleteDoc(doc(messagesRef, msg.id));
     }
 
-    // 🔹 Save summary as a message
+    // 🔹 Save summary under consistent schema
+    //await setDoc(doc(messagesRef, "summary"), {
+      //summary,
+      //timestamp: new Date().toISOString(),
+    //});
+    // 🔹 Save summary under consistent schema with role=system
     await setDoc(doc(messagesRef, "summary"), {
-      type: "summary",
-      content: summary,
-      timestamp: Date.now(),
+      role: "system",
+      summary,
+      timestamp: new Date().toISOString(),
     });
+
 
     return NextResponse.json({ summary, kept: lastN.length });
   } catch (err) {

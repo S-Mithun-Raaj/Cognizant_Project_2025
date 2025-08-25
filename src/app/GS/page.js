@@ -34,12 +34,21 @@ function getSessionId(date = new Date()) {
   return `${formatDateKey(date)}-${formatTimeKey(date)}`;
 }
 
-const getStructuredHistory = (messages) => {
-  return messages.map(msg => ({
+// Fix 1: Update getStructuredHistory to include summary as system message
+const getStructuredHistory = (messages, summary = "") => {
+  const history = messages.map(msg => ({
     role: msg.role === "user" || msg.ChatBy === "User" ? "user" : "assistant",
     content: msg.content || msg.Message,
     timestamp: msg.timestamp?.toDate?.()?.toISOString?.() || new Date().toISOString()
   }));
+
+  if (summary) {
+    return [
+      { role: "system", content: `Conversation so far (summary): ${summary}` },
+      ...history
+    ];
+  }
+  return history;
 };
 
 const callSummarizeAPI = async (text, profileId, chatId) => {
@@ -72,8 +81,8 @@ export default function ChatbotPage({ profileId }) {
   const [input, setInput] = useState("");
   const [chatTopics, setChatTopics] = useState([]);
   const [chatId, setChatId] = useState(null);
-  const [namespace, setNamespace] = useState(null); // <- track namespace
-  const [retrieverSet, setRetrieverSet] = useState(false); // <- track retriever status
+  const [namespace, setNamespace] = useState(null);
+  const [retrieverSet, setRetrieverSet] = useState(false);
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [voices, setVoices] = useState([]);
@@ -81,7 +90,6 @@ export default function ChatbotPage({ profileId }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [gifKey, setGifKey] = useState(0);
 
-  // Load profile ID from localStorage if not provided
   useEffect(() => {
     if (!userProfileId && typeof window !== "undefined") {
       const storedId = localStorage.getItem("selectedProfileId");
@@ -416,7 +424,7 @@ export default function ChatbotPage({ profileId }) {
     return msgs.map(m => `${m.role === "user" ? "user" : "assistant"}: ${m.content}`).join("\n");
   };
 
-  // Send message & handle AI response with RAG buffer + summarizer
+  // Fix 2: Use summary in handleSend
   const handleSend = async () => {
     if (!retrieverSet) {
       alert("Retriever not ready yet. Please wait...");
@@ -480,14 +488,8 @@ export default function ChatbotPage({ profileId }) {
         await setDoc(summaryDocRef, { summary: newSummary });
       }
 
-      // --- Build context & structured history ---
-      const lastFiveMsgs = updatedMessages.slice(-5);
-      const context =
-        summary && updatedMessages.length > 50
-          ? `${summary}\n${messagesToText(lastFiveMsgs)}`
-          : messagesToText(updatedMessages);
-
-      const structured = getStructuredHistory(updatedMessages);
+      // --- Build context & structured history (Fix 2) ---
+      const structured = getStructuredHistory(updatedMessages, summary);
 
       // --- Call model correctly ---
       const controller = new AbortController();
@@ -500,7 +502,6 @@ export default function ChatbotPage({ profileId }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             request: userMsg,
-            context,
             messages: structured,
             chatId: activeChatId,
             profileId: userProfileId,
