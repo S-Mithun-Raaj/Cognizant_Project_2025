@@ -149,9 +149,8 @@ export default function Home() {
                 Stay Calm, Stay Safe. We’ve Got You Covered.
               </h1>
               <p className="text-muted fs-4">
-                First Aid in a Flash. Experience the future of care—where AI
-                understands, responds, and supports you with the warmth and
-                intelligence of human touch.
+                Discover AlphaWell the AI-powered medical chatbot that listens, learns, 
+                and transforms your documents into simple, reliable guidance for a healthier tomorrow.
               </p>
               <Link href="/Sidebarpages/profilemanger" className="get-started-btn">
                 Get Started
