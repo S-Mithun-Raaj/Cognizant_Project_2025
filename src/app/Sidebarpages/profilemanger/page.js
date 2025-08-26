@@ -35,13 +35,16 @@ const Profile = () => {
   });
 
   const familyRoles = [
-    'Father', 'Mother', 'Son', 'Daughter',
+    'Doctor','Patient','CareGiver','Father', 'Mother', 'Son', 'Daughter',
     'Grandfather', 'Grandmother', 'Uncle', 'Aunt', 'Other'
   ];
 
   const defaultAvatars = {
-    'Father': '👨‍⚕️',
-    'Mother': '👩‍⚕️', 
+    'Doctor': '👨‍⚕️',
+    'Patient': '🧔',
+    'CareGiver': '👩‍⚕️',
+    'Father': '🤵‍♂️',
+    'Mother': '🤵‍♀️', 
     'Son': '👦',
     'Daughter': '👧',
     'Grandfather': '👴',
