@@ -22,6 +22,7 @@ import {
 import { db } from "../firebaseConfig";
 import "./gs.css";
 import { API_URL } from "./config";
+import { AGENT_API_URL } from "./AgenticAIConfig";
 
 // Helpers for consistent Firestore keys and session IDs
 function formatDateKey(date = new Date()) {
@@ -496,19 +497,26 @@ export default function ChatbotPage({ profileId }) {
       const timeoutId = setTimeout(() => controller.abort(), 60000);
 
       let answer;
-      try {
-        const response = await fetch(`${API_URL}/alpha_bot80`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            request: userMsg,
-            messages: structured,
-            chatId: activeChatId,
-            profileId: userProfileId,
-            namespace,
-          }),
-          signal: controller.signal,
-        });
+
+      const historyStr = structured.map(m => `[${m.role}] ${m.content}`).join("\n");
+
+      const latestMsg = userMsg?.content || userMsg?.Message || "";
+
+      const requestStr = `${historyStr}\n[user] ${latestMsg}`;  // ✅ full convo + latest msg
+
+      try{
+      const response = await fetch(`${AGENT_API_URL}/alpha_bot80`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request: requestStr,       // ✅ single string
+          messages: structured,      // keep structured too
+          chatId: activeChatId,
+          profileId: userProfileId,
+          namespace,
+        }),
+        signal: controller.signal,
+      });
         clearTimeout(timeoutId);
         if (!response.ok) throw new Error("API error");
         const data = await response.json();
