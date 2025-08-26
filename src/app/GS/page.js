@@ -509,8 +509,8 @@ export default function ChatbotPage({ profileId }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          request: requestStr,       // ✅ single string
-          messages: structured,      // keep structured too
+          request: requestStr,
+          messages: structured,
           chatId: activeChatId,
           profileId: userProfileId,
           namespace,
