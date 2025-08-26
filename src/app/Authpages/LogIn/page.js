@@ -27,7 +27,7 @@ export default function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       alert("Login successful!");
-      router.push("/GS"); // Redirect to GS page
+      router.push("/Sidebarpages/profilemanger"); // Redirect to GS page
     } catch (err) {
       setError("Invalid email or password"); // Custom error message
     }
@@ -38,7 +38,7 @@ export default function Login() {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       console.log("Google Sign-In Success:", result.user);
-      router.push("/GS"); // Redirect to GS page
+      router.push("/Sidebarpages/profilemanger"); // Redirect to GS page
     } catch (err) {
       setError("Google Sign-In Failed: " + err.message);
     }
@@ -104,7 +104,7 @@ export default function Login() {
 
       {/* Footer */}
       <div className="footer">
-        <span style={{ color: "black" }}>Don't have an account? <a className="cl" href="/Authpages/SignIn">Sign Up</a></span>
+        <span style={{ color: "black" }}>Dont have an account? <a className="cl" href="/Authpages/SignIn">Sign Up</a></span>
       </div>
     </div>
   );

@@ -12,7 +12,9 @@ import {
   limit,
   doc,
 } from "firebase/firestore";
+import { API_URL } from "../../../GS/config";
 import styles from "./UploadPage.module.css";
+import { writeBatch } from "firebase/firestore";
 
 export default function UploadPage() {
   const [files, setFiles] = useState([]);
@@ -113,7 +115,7 @@ export default function UploadPage() {
       });
       formData.append("user_id", selectedProfileId);
 
-      const res = await fetch("your_link/upload", {
+      const res = await fetch(API_URL+"/upload", {
         method: "POST",
         body: formData,
       });
@@ -125,8 +127,9 @@ export default function UploadPage() {
 
       const data = await res.json();
 
-      // Firestore batch write for better performance
-      const batch = db.batch();
+      // ✅ Correct
+      const batch = writeBatch(db);
+
       const uploadsRef = collection(
         db,
         "profileData",
