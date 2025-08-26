@@ -173,18 +173,16 @@ export default function Home() {
                   style={{ borderRadius: "1000px" }}
                    ></iframe>
                   </div>
-                   <p className="text-muted fs-4">
-                       Hello I'm Alpha Well Your Chatbot Assistant</p>
                   </div>
 
                   {/* Right Side - Image */}
                   <div>
                  <img 
-                src="/xx1.png" 
+                src="/x.png" 
                 alt="bot" 
-                width="180"
-                height="160"
-                style={{ float: "right", marginTop: "-127px", marginRight: "-95px" }}/>
+                width="80"
+                height="60"
+                style={{ float: "right", marginTop: "-80px", marginRight: "-55px" }}/>
                   </div>
                 </div>
               </div>
