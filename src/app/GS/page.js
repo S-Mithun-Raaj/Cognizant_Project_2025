@@ -633,16 +633,16 @@ export default function ChatbotPage({ profileId }) {
                 >
                   <span className={`topic-title ${topic.id === chatId ? "active" : ""}`}>
                     {topic.title}
-                  </span>
-                  {topic.ended && <span className="ended-flag">(Ended)</span>}
-                </button>
-                <button
-                  className="btn btn-sm btn-danger ms-2 delete-chat-btn"
+                                    <button
+                  className="buttonhe"
                   onClick={() => handleDeleteChat(topic.id)}
                   aria-label="Delete chat"
                   title="Delete chat"
                 >
                   🗑️
+                </button>
+                  </span>
+                  {topic.ended && <span className="ended-flag">(Ended)</span>}
                 </button>
               </li>
             ))

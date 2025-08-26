@@ -70,7 +70,22 @@ html, body, #__next {
   overflow-y: auto;
   border-right: 1px solid eee;
 }
-
+.buttonhe{
+  color:  #e25757;
+  background: #e25757;
+  border: none;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-left: 35px;
+  cursor: pointer;
+}
+.buttonhe:hover {
+  background: #ef7d7d;  /* darker shade on hover */
+  color: #fff;          /* keep text visible */
+  transform: translateY(-2px); /* subtle lift effect */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
 .sidebar-title { 
   margin: 0 0 10px 0; 
   font-size: 1.05rem; 
@@ -267,7 +282,7 @@ html, body, #__next {
 }
 
 .send-btn {
-  background: #111;
+  background: #1b1b1b;
   color: white;
   border: none;
   padding: 10px 14px;
@@ -309,8 +324,9 @@ html, body, #__next {
   top: 0;
   padding: 15px 10px;
   font-weight: 600;
-  color: #333;
-  background: rgba(255,255,255,0.95);
+  color: #fff7f7;
+  background: rgba(0, 0, 0, 0.95);
+  border-radius: 7px;
   z-index: 4;
   border-bottom: 1px solid rgba(0,0,0,0.04);
 }
