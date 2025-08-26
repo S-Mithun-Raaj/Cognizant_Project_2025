@@ -106,6 +106,7 @@ export default function ChatbotPage({ profileId }) {
   useEffect(() => {
     if (!userProfileId) return;
     const fetchNamespaceAndSetRetriever = async () => {
+      console.log("Fetching latest namespace for profile");
       try {
         // Fetch latest namespace from Firestore
         const uploadsRef = collection(db, "profileData", userProfileId, "uploads");
@@ -121,19 +122,19 @@ export default function ChatbotPage({ profileId }) {
         const namespace = latest.namespace;
         setNamespace(namespace);
 
-        // Call backend to set retriever
-        const res = await fetch(`${API_URL}/setRetriever`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ namespace }),
-        });
+        // // Call backend to set retriever
+        // const res = await fetch(`${API_URL}/setRetriever`, {
+        //   method: "POST",
+        //   headers: { "Content-Type": "application/json" },
+        //   body: JSON.stringify({ namespace }),
+        // });
 
-        if (!res.ok) throw new Error("Failed to set retriever");
+        // if (!res.ok) throw new Error("Failed to set retriever");
 
         setRetrieverSet(true);
-        console.log("✅ Retriever set with namespace:", namespace);
+        console.log("✅ Namespace is Set:", namespace);
       } catch (err) {
-        console.error("Error setting retriever:", err);
+        console.error("Error setting Namespace:", err);
       }
     };
 
@@ -513,7 +514,7 @@ export default function ChatbotPage({ profileId }) {
           messages: structured,
           chatId: activeChatId,
           profileId: userProfileId,
-          namespace,
+          namespace: namespace,
         }),
         signal: controller.signal,
       });
