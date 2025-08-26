@@ -203,8 +203,8 @@ const Profile = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Who's seeking health support today?</h1>
-        <p className={styles.subtitle}>Choose your profile to continue with personalized care</p>
+        <h1 className={styles.title}>Who’s connecting with AlphaWell today?</h1>
+        <p className={styles.subtitle}>Choose your profile to continue with personalized AI support.</p>
       </div>
 
       {error && (
