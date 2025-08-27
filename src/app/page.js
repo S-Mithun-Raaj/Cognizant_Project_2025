@@ -133,7 +133,7 @@ export default function Home() {
                   className="btn btn-secondary ms-2"
                   onClick={handleSimulateLogin}
                 >
-                  Simulate Login
+                  About Us
                 </button>
               </>
             )}
